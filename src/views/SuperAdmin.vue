@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import Modal from '../components/Modal.vue'
 import axios from 'axios'
 let showModal = ref(false)
+let editModal = ref(false)
 let users = ref([])
 
 axios
@@ -71,30 +72,60 @@ const deletee = (id)=>{
 }
 
 const edit = (id)=> {
-  if (name.value.length < 2 || surname.value.length < 2) {
-    notif.value = 'red'
-    return
-  }
-  else{
-  axios.patch(`http://34.125.211.64:3300/api/users/update/${id}`,{name: "John"},{
-          headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('token'))}` }
-        }).then((res)=> {
-          console.log(res.data);
-          location.reload()
-        }).catch((e)=>{
-          console.log(e);
-        })
+
+  axios
+    .patch(
+      `http://34.125.211.64:3300/api/users/update/${editId.value}`,
+      { name: editName.value, surname: editSurname.value },
+      {
+        headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('token'))}` }
       }
+    )
+    .then((res) => {
+      console.log(res.data)
+      location.reload()
+    })
+    .catch((e) => {
+      console.log(e)
+    })
 }
 
 const logout = ()=>{
         localStorage.removeItem('token')
         window.location.href = `/login`
 }
+
+let editName = ref('')
+let editSurname = ref('')
+let editId = ref('')
+const openEditModal = (name, surname, id) => {
+  editName.value = name
+  editSurname.value = surname
+  editId.value = id
+}
 </script>
 
 <template>
   <div class="wrapper">
+    <div v-if="editModal" class="edit-modal-backdrop">
+      <div class="edit-modal">
+          <h3 style="font-family: sans-serif;">Edit user</h3>
+          <input name="pname" v-model="editName" class="product-input" placeholder="Name" type="text" />
+          <input
+            name="pbrand"
+            v-model="editSurname"
+            class="product-input"
+            placeholder="Brand"
+            type="text"
+          />
+          <div style="display: flex; flex-direction: row; width: 60%; gap: 30px">
+            <button style="width: 48%" @click="editModal = false">Cancel</button>
+            <button style="width: 48%" v-on:click="edit(), (editModal = false)">Save</button>
+          </div>
+      </div>
+    </div>
+
+
     <h1>Welcome</h1>
     <h1>Users</h1>
 
@@ -138,7 +169,16 @@ const logout = ()=>{
           <td>{{ product.name }}</td>
           <td>{{ product.surname }}</td>
           <td><button @click="deletee(product._id)"  style="background-color: crimson; color: white;">Delete</button></td>
-          <td><button v-on:click="edit(product._id)" style="background-color:yellow; color: black;">Edit</button></td>
+          <td>
+            <button
+              v-on:click="
+                openEditModal(product.name, product.surname, product._id), (editModal = true)
+              "
+              style="background-color: yellow; color: black"
+            >
+              Edit
+            </button>
+          </td>
         </tr>
 
         <tr v-else>
@@ -146,7 +186,16 @@ const logout = ()=>{
           <td>{{ product.name }}</td>
           <td>{{ product.surname }}</td>
           <td><button @click="deletee(product._id)" style="background-color: crimson; color: white;">Delete</button></td>
-          <td><button v-on:click="edit(product._id)" style="background-color:yellow; color: black;">Edit</button></td>
+          <td>
+            <button
+              v-on:click="
+                openEditModal(product.name, product.surname, product._id), (editModal = true)
+              "
+              style="background-color: yellow; color: black"
+            >
+              Edit
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -283,6 +332,40 @@ button {
   background-color: rgb(18, 221, 153);
   color: rgb(243, 249, 255);
   cursor: pointer;
+}
+
+.edit-modal-backdrop {
+  /* position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 50vh;
+    width: 50%;
+    gap: 20px;
+    background-color: azure; */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-modal{
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 50vh;
+    width: 50%;
+    gap: 20px;
+    background-color: azure;
+    border-radius: 10px;
 }
 
 .fade-enter-active,
